@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+	  tools {
+		  maven 'M3.8'
+	  }
+    stages {
+        stage('Check out code') {
+            steps {
+				      git branch: 'main', url: 'https://github.com/Jayaramarao/My-New.git'
+            }
+		    }
+		    stage('Build') { 
+			      steps {
+				      sh 'mvn clean package -f my-app/pom.xml'
+			      }
+		    }
+		    stage('Archive Artifacts') { 
+			    steps {
+				    archiveArtifacts artifacts: 'my-app/target/*.?ar', followSymlinks: false
+			    }
+		    }
+		    stage('Junit testreports') { 
+			    steps {
+				    junit 'my-app/target/surefire-reports/*.xml'
+			    }
+        }
+		    stage('Artifact uploader') {
+			    steps {
+				    nexusArtifactUploader artifacts: [
+					  [artifactId: 'my-app', 
+						  classifier: '', 
+						  file: 'my-app/target/my-app-1.0-SNAPSHOT.jar', 
+						  type: 'jar']	
+				    ], 
+					    credentialsId: 'nexuscred', 
+					    groupId: 'com.Hello.app', 
+					    nexusUrl: '34.209.24.93', 
+					    nexusVersion: 'nexus3', 
+					    protocol: 'http', 
+					    repository: 'maven-snapshots', 
+					    version: '1.0-SNAPSHOT'
+		        }
+	      }
+     }
+}
